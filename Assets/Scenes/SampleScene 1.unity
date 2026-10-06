@@ -1432,6 +1432,14 @@ PrefabInstance:
       propertyPath: addForce
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 3517531661633369031, guid: 2ce75e76a4f44cd429886b7d81e32b61, type: 3}
+      propertyPath: jumpForce
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3517531661633369031, guid: 2ce75e76a4f44cd429886b7d81e32b61, type: 3}
+      propertyPath: lungeDistance
+      value: 20
+      objectReference: {fileID: 0}
     - target: {fileID: 4410806590407014865, guid: 2ce75e76a4f44cd429886b7d81e32b61, type: 3}
       propertyPath: m_Size.x
       value: 0.46

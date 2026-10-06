@@ -179,7 +179,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 0
 --- !u!114 &3517531661633369031
 MonoBehaviour:
@@ -203,6 +203,8 @@ MonoBehaviour:
   downButton: 115
   addForceButton: 32
   isFacingRight: 1
+  lungeImpulse: 6000
+  dashButton: 306
   spearPrefab: {fileID: 7920413092107816526, guid: 315b55d2bbe5e2a4caf16d8a32b4ec5a, type: 3}
   throwPoint: {fileID: 7952044698196088322}
   throwForce: 20

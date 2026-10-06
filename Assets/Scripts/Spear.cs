@@ -1,27 +1,27 @@
 using UnityEngine;
+using System.Collections;
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(BoxCollider2D))] 
 public class Spear : MonoBehaviour
 {
-    public float lifetime = 5f;
+    public float LifeTime = 6f;
+    public float TimeInWall = 10f;
     
     private Rigidbody2D rb;
     private bool hasHit = false; 
     private Collider2D spearCollider;
+    private Coroutine lifetimeCoroutine;
 
-    void Start()
-    {
+    void Start(){
         rb = GetComponent<Rigidbody2D>();
         spearCollider = GetComponent<Collider2D>();
         
-        Destroy(gameObject, lifetime);
+        lifetimeCoroutine = StartCoroutine(LifetimeSequence(LifeTime));
     }
 
-    void FixedUpdate()
-    {
-        if (!hasHit && rb.velocity.magnitude > 0.1f)
-        {
+    void FixedUpdate(){
+        if (!hasHit && rb.velocity.magnitude > 0.1f){
             float angle = Mathf.Atan2(rb.velocity.y, rb.velocity.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
         }
@@ -31,44 +31,65 @@ public class Spear : MonoBehaviour
     {
         if (hasHit) return;
 
-        if (collision.transform.CompareTag("Ground"))
+        Switch button = collision.gameObject.GetComponent<Switch>();
+        if (button != null)
         {
+            button.Activate();
             Stick();
+            return;
+        }
+
+        if (collision.transform.CompareTag("Wall"))
+        {
+            Vector2 wallNormal = collision.GetContact(0).normal;
+            Vector2 spearDirection = transform.right;
+
+            float angle = Vector2.Angle(spearDirection, -wallNormal);
+
+            if (angle <= 25f)
+            {
+                Stick();
+            }
+            else
+            {
+                hasHit = true;
+                rb.velocity = Vector2.zero;
+                rb.angularVelocity = 0f;
+            }
+        }
+        else if (collision.transform.CompareTag("Ground") || collision.transform.CompareTag("StuckSpear"))
+        {
+            hasHit = true;
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
         }
     }
-void Stick()
-    {
+
+    void Stick() {
         hasHit = true;
         
-        // Останавливаем физику копья
-        rb.velocity = Vector2.zero; 
+        if (lifetimeCoroutine != null) StopCoroutine(lifetimeCoroutine);
+
+        rb.velocity = Vector2.zero;
         rb.angularVelocity = 0f;
         rb.constraints = RigidbodyConstraints2D.FreezeAll;
-        rb.isKinematic = true;      
+        rb.isKinematic = true;
+        transform.position += transform.right * 0.1f;
+        gameObject.tag = "StuckSpear"; 
         
-        transform.position += transform.right * 0.1f; 
-        gameObject.tag = "Ground"; // Делаем копье "землей"
-        
-        // --- ВАЖНО: СНОВА ДЕЛАЕМ КОПЬЕ ТВЕРДЫМ ДЛЯ ИГРОКА ---
-        
-        // Если вы настраивали слои (Способ 1), возвращаем копье на базовый слой (Default),
-        // который сталкивается с игроком.
-        gameObject.layer = 0; 
-
-        // Если вы отключали коллизию через код (Способ 2), 
-        // находим скрипт игрока и снова включаем столкновение:
-        PlayerMovement player = FindObjectOfType<PlayerMovement>();
-        if (player != null)
-        {
+        PlayerMovement player = FindAnyObjectByType<PlayerMovement>();
+        if (player != null){
             Collider2D playerCollider = player.GetComponent<Collider2D>();
-            if (spearCollider != null && playerCollider != null)
-            {
+            if (spearCollider != null && playerCollider != null){
                 Physics2D.IgnoreCollision(spearCollider, playerCollider, false);
             }
         }
-        // ----------------------------------------------------
 
-        CancelInvoke(); 
-        Destroy(gameObject, 10f); 
+        StartCoroutine(LifetimeSequence(TimeInWall));
+    }
+
+    private IEnumerator LifetimeSequence(float delay) {
+        yield return new WaitForSeconds(delay);
+        Destroy(gameObject);
     }
 }
