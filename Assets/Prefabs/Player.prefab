@@ -128,7 +128,7 @@ CapsuleCollider2D:
   m_GameObject: {fileID: 7759671226871683901}
   m_Enabled: 1
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 66fc2157ae805964ab4622c0c591de91, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -195,15 +195,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   projectAxis: 0
   speed: 150
-  addForce: 7
-  lookAtCursor: 0
+  jumpForce: 10
   leftButton: 97
   rightButton: 100
   upButton: 119
   downButton: 115
-  addForceButton: 32
+  jumpButton: 32
   isFacingRight: 1
-  lungeImpulse: 6000
+  lungeDistance: 20
+  lungeDuration: 0.3
+  lungeCooldown: 1
   dashButton: 306
   spearPrefab: {fileID: 7920413092107816526, guid: 315b55d2bbe5e2a4caf16d8a32b4ec5a, type: 3}
   throwPoint: {fileID: 7952044698196088322}

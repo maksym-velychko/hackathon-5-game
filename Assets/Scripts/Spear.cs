@@ -46,7 +46,7 @@ public class Spear : MonoBehaviour
 
             float angle = Vector2.Angle(spearDirection, -wallNormal);
 
-            if (angle <= 25f)
+            if (angle <= 35f)
             {
                 Stick();
             }

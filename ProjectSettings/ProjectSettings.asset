@@ -711,11 +711,11 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
-  cloudProjectId: 4002e1d7-a408-468b-b178-960728a53478
+  cloudProjectId: ee32aafe-ecd8-42da-ac4b-0f0f656a7a0e
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: My project (2)
-  organizationId: maximvel
+  projectName: My project 2026-10-05_19-03-51
+  organizationId: gtsl70075
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}

@@ -28,13 +28,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7920413092107816526}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.000008386162, y: 0.0000054938164, z: -0.836487, w: 0.54798675}
-  m_LocalPosition: {x: -3.4188, y: 0.4041, z: 0}
-  m_LocalScale: {x: 0.38320896, y: 0.17370148, z: 0.6160968}
+  m_LocalRotation: {x: 0, y: 0.0000087072885, z: 0, w: 1}
+  m_LocalPosition: {x: -3.3019, y: 0.3511, z: -0}
+  m_LocalScale: {x: 0.35734236, y: 0.16197664, z: 0.5745103}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0.001, z: -113.542}
+  m_LocalEulerAnglesHint: {x: 0, y: 0.001, z: 0}
 --- !u!212 &3891270306361998282
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -73,8 +73,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: -1727466793
+  m_SortingLayer: 6
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 92f8f139e76b76d4281682afdd65264e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -171,4 +171,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08d8d40c4ea49c34eba863441d3392e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lifetime: 100
+  LifeTime: 6
+  TimeInWall: 10

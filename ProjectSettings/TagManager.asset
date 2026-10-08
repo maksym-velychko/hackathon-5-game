@@ -45,3 +45,30 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: 1LvlBackground
+    uniqueID: 1129646535
+    locked: 0
+  - name: 2LvlBackground
+    uniqueID: 2253480133
+    locked: 0
+  - name: 3LvlBackground
+    uniqueID: 1269240351
+    locked: 0
+  - name: 1Background
+    uniqueID: 3158728393
+    locked: 0
+  - name: 2Background
+    uniqueID: 847296891
+    locked: 0
+  - name: 3Bacjground
+    uniqueID: 3213307313
+    locked: 0
+  - name: Player
+    uniqueID: 2567500503
+    locked: 0
+  - name: 1Foreground
+    uniqueID: 3150203311
+    locked: 0
+  - name: 2Foreground
+    uniqueID: 2892525809
+    locked: 0

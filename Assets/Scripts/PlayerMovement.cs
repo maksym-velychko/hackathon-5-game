@@ -37,6 +37,7 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody2D body;
     private bool isGrounded;
     private Animator anim;
+    private bool jumpRequested = false;
 
     void Start() 
     {
@@ -52,9 +53,20 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    void OnCollisionEnter2D(Collision2D coll)
+    {
+        if (coll.gameObject.CompareTag("Ground") || coll.gameObject.CompareTag("StuckSpear"))
+        {
+            isGrounded = true;
+            if (anim != null) {
+                anim.SetBool("isGrounded", true); 
+            }
+        }
+    }
+
     void OnCollisionStay2D(Collision2D coll) 
     {
-        if (coll.transform.CompareTag("Ground") || coll.transform.CompareTag("StuckSpear"))
+        if (coll.gameObject.CompareTag("Ground") || coll.gameObject.CompareTag("StuckSpear"))
         {
             body.drag = 10;
             isGrounded = true;
@@ -63,36 +75,13 @@ public class PlayerMovement : MonoBehaviour
 
     void OnCollisionExit2D(Collision2D coll) 
     {
-        if (coll.transform.CompareTag("Ground") || coll.transform.CompareTag("StuckSpear"))
+        if (coll.gameObject.CompareTag("Ground") || coll.gameObject.CompareTag("StuckSpear"))
         {
             body.drag = 0;
             isGrounded = false;
-        }
-    }
 
-    void FixedUpdate()
-    {
-        if (isLunging) return;
-
-        body.AddForce(moveDirection * body.mass * speed);
-
-        if (Mathf.Abs(body.velocity.x) > speed / 100f)
-        {
-            body.velocity = new Vector2(Mathf.Sign(body.velocity.x) * speed / 100f, body.velocity.y);
-        }
-
-        if (projectAxis == ProjectAxis.xAndY)
-        {
-            if (Mathf.Abs(body.velocity.y) > speed / 100f)
-            {
-                body.velocity = new Vector2(body.velocity.x, Mathf.Sign(body.velocity.y) * speed / 100f);
-            }
-        }
-        else
-        {
-            if (Input.GetKey(jumpButton) && isGrounded)
-            {
-                body.velocity = new Vector2(body.velocity.x, jumpForce);
+            if (anim != null) {
+                anim.SetBool("isGrounded", false);
             }
         }
     }
@@ -122,7 +111,21 @@ public class PlayerMovement : MonoBehaviour
         {
             bool moving = (horizontal != 0);
             if (projectAxis == ProjectAxis.xAndY) moving = (horizontal != 0 || vertical != 0);
+            
             anim.SetBool("isRunning", moving); 
+        }
+
+        if (projectAxis == ProjectAxis.onlyX) 
+        {
+            if (Input.GetKeyDown(jumpButton) && isGrounded)
+            {
+                jumpRequested = true;
+                if (anim != null) 
+                {
+                    anim.SetTrigger("isJumping");
+                    anim.SetBool("isGrounded", false);
+                }
+            }
         }
 
         if (projectAxis == ProjectAxis.onlyX) 
@@ -140,6 +143,34 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKeyDown(dashButton))
         {
             StartCoroutine(PerformLunge());
+        }
+    }
+
+    void FixedUpdate()
+    {
+        if (isLunging) return;
+
+        body.AddForce(moveDirection * body.mass * speed);
+
+        if (Mathf.Abs(body.velocity.x) > speed / 100f)
+        {
+            body.velocity = new Vector2(Mathf.Sign(body.velocity.x) * speed / 100f, body.velocity.y);
+        }
+
+        if (projectAxis == ProjectAxis.xAndY)
+        {
+            if (Mathf.Abs(body.velocity.y) > speed / 100f)
+            {
+                body.velocity = new Vector2(body.velocity.x, Mathf.Sign(body.velocity.y) * speed / 100f);
+            }
+        }
+        else
+        {
+            if (jumpRequested)
+            {
+                body.velocity = new Vector2(body.velocity.x, jumpForce);
+                jumpRequested = false;
+            }
         }
     }
 
