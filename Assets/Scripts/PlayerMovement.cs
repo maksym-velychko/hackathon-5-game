@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.EventSystems; // 1. Додали для перевірки UI
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerMovement : MonoBehaviour 
@@ -90,9 +91,12 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isLunging) return;
 
+        bool isPointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.z));
         mousePos.z = 0;
-        if (Input.GetKey(throwButton) && Time.time >= nextThrowTime && spearPrefab != null)
+
+        if (!isPointerOverUI && Input.GetKey(throwButton) && Time.time >= nextThrowTime && spearPrefab != null)
         {
             ThrowSpear(mousePos);
             nextThrowTime = Time.time + throwCooldown;
