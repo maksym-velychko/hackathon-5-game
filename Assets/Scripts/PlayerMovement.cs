@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.Collections;
-using UnityEngine.EventSystems; // 1. Додали для перевірки UI
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerMovement : MonoBehaviour 
@@ -24,16 +24,9 @@ public class PlayerMovement : MonoBehaviour
     public float lungeCooldown = 1f;
     public KeyCode dashButton = KeyCode.LeftControl;
     
-    [Header("Spear Settings")]
-    public GameObject spearPrefab;
-    public Transform throwPoint;
-    public float throwForce = 20f;
-    public KeyCode throwButton = KeyCode.Mouse0;
-    public float throwCooldown = 1f;
-
     private bool lockLunge = false;
     private bool isLunging = false;
-    private float nextThrowTime = 1f;
+    public bool isAiming = false;
     private Vector2 moveDirection;
     private Rigidbody2D body;
     private bool isGrounded;
@@ -56,10 +49,9 @@ public class PlayerMovement : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D coll)
     {
-        if (coll.gameObject.CompareTag("Ground") || coll.gameObject.CompareTag("StuckSpear"))
-        {
+        if (coll.gameObject.CompareTag("Ground") || coll.gameObject.CompareTag("StuckSpear")){
             isGrounded = true;
-            if (anim != null) {
+            if (anim != null){
                 anim.SetBool("isGrounded", true); 
             }
         }
@@ -67,8 +59,7 @@ public class PlayerMovement : MonoBehaviour
 
     void OnCollisionStay2D(Collision2D coll) 
     {
-        if (coll.gameObject.CompareTag("Ground") || coll.gameObject.CompareTag("StuckSpear"))
-        {
+        if (coll.gameObject.CompareTag("Ground") || coll.gameObject.CompareTag("StuckSpear")){
             body.drag = 10;
             isGrounded = true;
         }
@@ -76,8 +67,7 @@ public class PlayerMovement : MonoBehaviour
 
     void OnCollisionExit2D(Collision2D coll) 
     {
-        if (coll.gameObject.CompareTag("Ground") || coll.gameObject.CompareTag("StuckSpear"))
-        {
+        if (coll.gameObject.CompareTag("Ground") || coll.gameObject.CompareTag("StuckSpear")){
             body.drag = 0;
             isGrounded = false;
 
@@ -95,22 +85,16 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.z));
         mousePos.z = 0;
-
-        if (!isPointerOverUI && Input.GetKey(throwButton) && Time.time >= nextThrowTime && spearPrefab != null)
-        {
-            ThrowSpear(mousePos);
-            nextThrowTime = Time.time + throwCooldown;
-        }
+        isAiming = Input.GetMouseButton(1);
 
         float horizontal = 0;
         float vertical = 0;
 
         if (Input.GetKey(leftButton)) horizontal = -1;
         else if (Input.GetKey(rightButton)) horizontal = 1;
-
         if (Input.GetKey(upButton)) vertical = 1;
         else if (Input.GetKey(downButton)) vertical = -1;
-
+        
         if (anim != null)
         {
             bool moving = (horizontal != 0);
@@ -119,33 +103,33 @@ public class PlayerMovement : MonoBehaviour
             anim.SetBool("isRunning", moving); 
         }
 
-        if (projectAxis == ProjectAxis.onlyX) 
-        {
-            if (Input.GetKeyDown(jumpButton) && isGrounded)
-            {
+        if (projectAxis == ProjectAxis.onlyX) {
+            if (Input.GetKeyDown(jumpButton) && isGrounded){
                 jumpRequested = true;
-                if (anim != null) 
-                {
+                if (anim != null) {
                     anim.SetTrigger("isJumping");
                     anim.SetBool("isGrounded", false);
                 }
             }
         }
 
-        if (projectAxis == ProjectAxis.onlyX) 
-        {
+        if (projectAxis == ProjectAxis.onlyX) {
             moveDirection = new Vector2(horizontal, 0); 
         }
-        else 
-        {
+        else {
             moveDirection = new Vector2(horizontal, vertical).normalized; 
         }
+        
+        if (isAiming){
+            if (mousePos.x > transform.position.x && !isFacingRight) Flip();
+            else if (mousePos.x < transform.position.x && isFacingRight) Flip();
+        }
+        else{
+            if (horizontal > 0 && !isFacingRight) Flip();
+            else if (horizontal < 0 && isFacingRight) Flip();
+        }
 
-        if (horizontal > 0 && !isFacingRight) Flip();
-        else if (horizontal < 0 && isFacingRight) Flip();
-
-        if (Input.GetKeyDown(dashButton))
-        {
+        if (Input.GetKeyDown(dashButton)){
             StartCoroutine(PerformLunge());
         }
     }
@@ -153,70 +137,29 @@ public class PlayerMovement : MonoBehaviour
     void FixedUpdate()
     {
         if (isLunging) return;
-
-        body.AddForce(moveDirection * body.mass * speed);
-
-        if (Mathf.Abs(body.velocity.x) > speed / 100f)
-        {
-            body.velocity = new Vector2(Mathf.Sign(body.velocity.x) * speed / 100f, body.velocity.y);
+        float currentSpeed = isAiming ? speed / 2f : speed;
+        body.AddForce(moveDirection * body.mass * currentSpeed);
+        if (Mathf.Abs(body.velocity.x) > currentSpeed / 100f){
+            body.velocity = new Vector2(Mathf.Sign(body.velocity.x) * currentSpeed / 100f, body.velocity.y);
         }
 
-        if (projectAxis == ProjectAxis.xAndY)
-        {
-            if (Mathf.Abs(body.velocity.y) > speed / 100f)
-            {
-                body.velocity = new Vector2(body.velocity.x, Mathf.Sign(body.velocity.y) * speed / 100f);
+        if (projectAxis == ProjectAxis.xAndY){
+            if (Mathf.Abs(body.velocity.y) > currentSpeed / 100f){
+                body.velocity = new Vector2(body.velocity.x, Mathf.Sign(body.velocity.y) * currentSpeed / 100f);
             }
         }
-        else
-        {
-            if (jumpRequested)
-            {
+        else{
+            if (jumpRequested){
                 body.velocity = new Vector2(body.velocity.x, jumpForce);
                 jumpRequested = false;
             }
         }
     }
 
-    void Flip()
+    public void Flip() 
     {
         isFacingRight = !isFacingRight;
         transform.Rotate(0f, 180f, 0f); 
-    }
-    
-    void ThrowSpear(Vector3 targetPos)
-    {
-        Transform spawnPoint = (throwPoint != null) ? throwPoint : transform;
-        Vector2 throwDirection = ((Vector2)targetPos - (Vector2)spawnPoint.position).normalized;
-        Vector2 forwardVector = isFacingRight ? Vector2.right : Vector2.left;
-        
-        float currentAngle = Vector2.Angle(forwardVector, throwDirection);
-        if (currentAngle > 85f)
-        {
-            float crossZ = (forwardVector.x * throwDirection.y) - (forwardVector.y * throwDirection.x);
-            float sign = Mathf.Sign(crossZ);
-            float baseAngle = isFacingRight ? 0f : 180f;
-            float clampedAngle = baseAngle + (85f * sign);
-            throwDirection = new Vector2(Mathf.Cos(clampedAngle * Mathf.Deg2Rad), Mathf.Sin(clampedAngle * Mathf.Deg2Rad));
-        }
-
-        float angle = Mathf.Atan2(throwDirection.y, throwDirection.x) * Mathf.Rad2Deg;
-        Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-
-        GameObject spear = Instantiate(spearPrefab, spawnPoint.position, rotation);
-        
-        Collider2D playerCollider = GetComponent<Collider2D>();
-        Collider2D spearCollider = spear.GetComponent<Collider2D>();
-        if (playerCollider != null && spearCollider != null)
-        {
-            Physics2D.IgnoreCollision(playerCollider, spearCollider);
-        }
-
-        Rigidbody2D spearRb = spear.GetComponent<Rigidbody2D>();
-        if (spearRb != null)
-        {
-            spearRb.AddForce(throwDirection * throwForce, ForceMode2D.Impulse);
-        }
     }
 
     IEnumerator PerformLunge()

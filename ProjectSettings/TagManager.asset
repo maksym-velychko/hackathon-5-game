@@ -66,6 +66,12 @@ TagManager:
   - name: Player
     uniqueID: 2567500503
     locked: 0
+  - name: ammo
+    uniqueID: 1048190661
+    locked: 0
+  - name: Enemy
+    uniqueID: 1221283113
+    locked: 0
   - name: 1Foreground
     uniqueID: 3150203311
     locked: 0
