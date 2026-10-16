@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(AudioSource))] // Автоматически добавит AudioSource на игрока, если его нет
 public class PlayerMovement : MonoBehaviour 
 {
     public enum ProjectAxis { onlyX = 0, xAndY = 1 };
@@ -23,6 +24,13 @@ public class PlayerMovement : MonoBehaviour
     public float lungeDuration = 0.3f;
     public float lungeCooldown = 1f;
     public KeyCode dashButton = KeyCode.LeftControl;
+
+    [Header("Audio Settings (Звуки)")]
+    public AudioSource audioSource;
+    public AudioClip jumpSound;       // Звук прыжка
+    public AudioClip[] footstepSounds; // Массив звуков шагов (можно закинуть 1 или несколько для разнообразия)
+    public float stepRate = 0.35f;    // Интервал между шагами в секундах
+    private float nextStepTime = 0f;
     
     private bool lockLunge = false;
     private bool isLunging = false;
@@ -37,6 +45,11 @@ public class PlayerMovement : MonoBehaviour
     {
         body = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
         
         body.constraints = RigidbodyConstraints2D.FreezeRotation;
 
@@ -95,17 +108,35 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKey(upButton)) vertical = 1;
         else if (Input.GetKey(downButton)) vertical = -1;
         
+        bool moving = (horizontal != 0);
+        if (projectAxis == ProjectAxis.xAndY) moving = (horizontal != 0 || vertical != 0);
+
         if (anim != null)
         {
-            bool moving = (horizontal != 0);
-            if (projectAxis == ProjectAxis.xAndY) moving = (horizontal != 0 || vertical != 0);
-            
             anim.SetBool("isRunning", moving); 
         }
 
+        // --- ЛОГИКА ЗВУКОВ ХОДЬБЫ ---
+        bool canPlayStep = (projectAxis == ProjectAxis.onlyX) ? isGrounded : true;
+        if (moving && canPlayStep && Time.time >= nextStepTime)
+        {
+            PlayFootstepSound();
+            // Если игрок целится (идет медленнее), увеличиваем паузу между шагами в 1.5 раза
+            float currentStepRate = isAiming ? stepRate * 1.5f : stepRate;
+            nextStepTime = Time.time + currentStepRate;
+        }
+
+        // --- ЛОГИКА ПРЫЖКА И ЗВУКА ПРЫЖКА ---
         if (projectAxis == ProjectAxis.onlyX) {
             if (Input.GetKeyDown(jumpButton) && isGrounded){
                 jumpRequested = true;
+                
+                // Проигрываем звук прыжка
+                if (jumpSound != null && audioSource != null)
+                {
+                    audioSource.PlayOneShot(jumpSound);
+                }
+
                 if (anim != null) {
                     anim.SetTrigger("isJumping");
                     anim.SetBool("isGrounded", false);
@@ -131,6 +162,20 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.GetKeyDown(dashButton)){
             StartCoroutine(PerformLunge());
+        }
+    }
+
+    // Метод для воспроизведения шага со случайным выбором звука и легким изменением тона
+    void PlayFootstepSound()
+    {
+        if (footstepSounds != null && footstepSounds.Length > 0 && audioSource != null)
+        {
+            int randomIndex = Random.Range(0, footstepSounds.Length);
+            
+            // Слегка меняем высоту звука (pitch), чтобы один и тот же звук не звучал как пулемет
+            audioSource.pitch = Random.Range(0.9f, 1.1f);
+            audioSource.PlayOneShot(footstepSounds[randomIndex]);
+            audioSource.pitch = 1f; // Возвращаем стандартный питч
         }
     }
 

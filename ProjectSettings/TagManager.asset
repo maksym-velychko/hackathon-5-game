@@ -8,11 +8,13 @@ TagManager:
   - Ground
   - Spear
   - StuckSpear
+  - Enemy
+  - Smert
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Obstacles
   - Water
   - UI
   - 
@@ -77,4 +79,10 @@ TagManager:
     locked: 0
   - name: 2Foreground
     uniqueID: 2892525809
+    locked: 0
+  - name: HP
+    uniqueID: 1135978721
+    locked: 0
+  - name: UI
+    uniqueID: 1686928947
     locked: 0
