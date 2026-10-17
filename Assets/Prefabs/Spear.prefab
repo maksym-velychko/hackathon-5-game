@@ -173,3 +173,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LifeTime: 6
   TimeInWall: 10
+  HitSound: {fileID: 8300000, guid: 49d87674a4e4c634d97569635c1a6887, type: 3}

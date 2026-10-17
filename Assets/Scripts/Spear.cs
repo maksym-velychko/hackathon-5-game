@@ -8,6 +8,9 @@ public class Spear : MonoBehaviour
     [Header("Настройки времени жизни")]
     public float LifeTime = 6f;
     public float TimeInWall = 10f;
+
+    [Header("Звуковые эффекты")]
+    public AudioClip HitSound; 
     
     private Rigidbody2D rb;
     private bool hasHit = false; 
@@ -68,6 +71,12 @@ public class Spear : MonoBehaviour
     void Stick() 
     {
         hasHit = true;
+
+        if (HitSound != null)
+        {
+            AudioSource.PlayClipAtPoint(HitSound, transform.position);
+        }
+        
         if (lifetimeCoroutine != null) StopCoroutine(lifetimeCoroutine);
         rb.velocity = Vector2.zero;
         rb.angularVelocity = 0f;
