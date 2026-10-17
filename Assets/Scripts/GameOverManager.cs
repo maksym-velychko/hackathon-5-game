@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 
 public class GameOverManager : MonoBehaviour
 {
-    [Header("UI Меню смерти")]
+    [Header("UI Меню смерти / Паузы")]
     public GameObject gameOverCanvas;
 
     [Header("Названия сцен для кнопок")]
@@ -22,15 +22,31 @@ public class GameOverManager : MonoBehaviour
     public float pauseDelay = 1f;
 
     private bool isPlayerDead = false;
+    // Новая переменная, чтобы отслеживать, открыто ли меню вручную через ESC
+    private bool isMenuOpen = false; 
+    private float originalCameraSize;
 
     void Start()
     {
         if (gameOverCanvas != null) gameOverCanvas.SetActive(false);
         if (mainCamera == null) mainCamera = Camera.main;
+        
+        if (mainCamera != null)
+        {
+            originalCameraSize = mainCamera.orthographicSize;
+        }
     }
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (!isPlayerDead)
+            {
+                ToggleMenu();
+            }
+        }
+
         if (isPlayerDead && mainCamera != null)
         {
             mainCamera.orthographicSize = Mathf.Lerp(
@@ -41,10 +57,33 @@ public class GameOverManager : MonoBehaviour
         }
     }
 
+    private void ToggleMenu()
+    {
+        isMenuOpen = !isMenuOpen;
+
+        if (isMenuOpen)
+        {
+            if (gameOverCanvas != null) gameOverCanvas.SetActive(true);
+            Time.timeScale = 0f;
+        }
+        else
+        {
+            ResumeGame();
+        }
+    }
+
+    public void ResumeGame()
+    {
+        isMenuOpen = false;
+        if (gameOverCanvas != null) gameOverCanvas.SetActive(false);
+        Time.timeScale = 1f;
+    }
+
     public void ShowGameOverMenu()
     {
         if (isPlayerDead) return;
         isPlayerDead = true;
+        isMenuOpen = true;
 
         if (gameOverCanvas != null) gameOverCanvas.SetActive(true);
         StartCoroutine(PauseGameRoutine());
@@ -53,7 +92,7 @@ public class GameOverManager : MonoBehaviour
     IEnumerator PauseGameRoutine()
     {
         yield return new WaitForSecondsRealtime(pauseDelay);
-        Time.timeScale = 0f; // Ставим на паузу
+        Time.timeScale = 0f; 
     }
 
     // ==========================================
@@ -63,21 +102,21 @@ public class GameOverManager : MonoBehaviour
     // 1. Кнопка "Рестарт"
     public void RestartGame()
     {
-        Time.timeScale = 1f; // Обязательно снимаем с паузы!
-        SceneManager.LoadScene(restartSceneName); // Грузит "OriginalScene"
+        Time.timeScale = 1f; 
+        SceneManager.LoadScene(restartSceneName); 
     }
 
     // 2. Кнопка "Меню"
     public void LoadMainMenu()
     {
-        Time.timeScale = 1f; // Обязательно снимаем с паузы!
-        SceneManager.LoadScene(menuSceneName); // Грузит "Menu"
+        Time.timeScale = 1f; 
+        SceneManager.LoadScene(menuSceneName); 
     }
 
     // 3. Кнопка "Выход"
     public void QuitGame()
     {
         Debug.Log("Выход из игры (Application.Quit)");
-        Application.Quit(); // Закрывает игру (работает только в скомпилированном билде, не в редакторе Unity)
+        Application.Quit(); 
     }
 }
