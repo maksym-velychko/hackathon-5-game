@@ -2,11 +2,17 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(AudioSource))]
 public class PlayerHealth : MonoBehaviour
 {
     [Header("Здоровье игрока")]
     public int maxHealth = 100;
     public int currentHealth;
+
+    [Header("Звуки")]
+    [Tooltip("Звук при смерти игрока")]
+    public AudioClip deathSound;
+    private AudioSource audioSource;
 
     [Header("Авто-регенерация ХП")]
     public float regenDelay = 20f;
@@ -20,7 +26,7 @@ public class PlayerHealth : MonoBehaviour
     public float smoothDuration = 0.3f;
 
     [Header("Меню смерти")]
-    public GameOverManager gameOverManager;
+    public GameOverManager gameOverManager; 
 
     private Animator anim;
     private Coroutine smoothHealthCoroutine;
@@ -30,6 +36,7 @@ public class PlayerHealth : MonoBehaviour
     {
         currentHealth = maxHealth;
         anim = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
 
         if (healthBarFill != null)
         {
@@ -65,7 +72,7 @@ public class PlayerHealth : MonoBehaviour
     {
         if (currentHealth <= 0) return;
 
-        currentHealth = Mathf.Max(currentHealth - damage, 0); // Не даем ХП уйти ниже 0
+        currentHealth = Mathf.Max(currentHealth - damage, 0); 
         UpdateHealthUI();
 
         if (regenCoroutine != null)
@@ -75,7 +82,7 @@ public class PlayerHealth : MonoBehaviour
 
         if (currentHealth <= 0)
         {
-            isDeath();
+            Die();
         }
         else
         {
@@ -83,12 +90,11 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-    // Мгновенная смерть при столкновении с объектом, у которого тег "Smert"
     void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Smert"))
         {
-            TakeDamage(1000); // Наносим 1000 урона, что мгновенно убивает игрока
+            TakeDamage(1000); 
         }
     }
 
@@ -96,7 +102,7 @@ public class PlayerHealth : MonoBehaviour
     {
         if (other.CompareTag("Smert"))
         {
-            TakeDamage(1000); // То же самое, если зона со смертельным тегом — это триггер
+            TakeDamage(1000); 
         }
     }
 
@@ -150,9 +156,15 @@ public class PlayerHealth : MonoBehaviour
         healthBarFill.fillAmount = targetFill;
     }
 
-    void isDeath()
+    void Die()
     {
         Debug.Log("Игрок погиб!");
+
+        // Проигрываем звук смерти сразу при гибели
+        if (deathSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(deathSound);
+        }
 
         if (regenCoroutine != null)
         {
@@ -161,22 +173,19 @@ public class PlayerHealth : MonoBehaviour
 
         if (anim != null)
         {
-            anim.SetTrigger("isDeath");
+            anim.SetTrigger("Die");
         }
         
-        // Прячем полоску ХП над головой
         if (healthBarCanvas != null)
         {
             Destroy(healthBarCanvas.gameObject, smoothDuration);
         }
 
-        // ВЫЗЫВАЕМ ПОКАЗ КАНВАСА СМЕРТИ
         if (gameOverManager != null)
         {
             gameOverManager.ShowGameOverMenu();
         }
 
-        // Отключаем управление движением
         PlayerMovement movement = GetComponent<PlayerMovement>();
         if (movement != null) movement.enabled = false;
     }

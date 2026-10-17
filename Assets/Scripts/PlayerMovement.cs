@@ -27,9 +27,11 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Audio Settings (Звуки)")]
     public AudioSource audioSource;
-    public AudioClip jumpSound;       // Звук прыжка
-    public AudioClip[] footstepSounds; // Массив звуков шагов (можно закинуть 1 или несколько для разнообразия)
-    public float stepRate = 0.35f;    // Интервал между шагами в секундах
+    public AudioClip jumpSound;       
+    public AudioClip[] footstepSounds; 
+    public AudioClip dashSound;
+    public AudioClip landSound;
+    public float stepRate = 0.35f;
     private float nextStepTime = 0f;
     
     private bool lockLunge = false;
@@ -40,6 +42,9 @@ public class PlayerMovement : MonoBehaviour
     private bool isGrounded;
     private Animator anim;
     private bool jumpRequested = false;
+
+    // Флаг для отслеживания момента приземления
+    private bool wasGroundedLastFrame;
 
     void Start() 
     {
@@ -58,6 +63,8 @@ public class PlayerMovement : MonoBehaviour
             body.gravityScale = 0;
             body.drag = 10; 
         }
+
+        wasGroundedLastFrame = isGrounded;
     }
 
     void OnCollisionEnter2D(Collision2D coll)
@@ -66,6 +73,12 @@ public class PlayerMovement : MonoBehaviour
             isGrounded = true;
             if (anim != null){
                 anim.SetBool("isGrounded", true); 
+            }
+
+            // Проигрываем звук приземления только если мы до этого летели/падали
+            if (!wasGroundedLastFrame && landSound != null && audioSource != null)
+            {
+                audioSource.PlayOneShot(landSound);
             }
         }
     }
@@ -163,6 +176,9 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKeyDown(dashButton)){
             StartCoroutine(PerformLunge());
         }
+
+        // Запоминаем текущее состояние земли для следующего кадра
+        wasGroundedLastFrame = isGrounded;
     }
 
     // Метод для воспроизведения шага со случайным выбором звука и легким изменением тона
@@ -215,6 +231,10 @@ public class PlayerMovement : MonoBehaviour
         isLunging = true;
 
         if (anim != null) anim.SetTrigger("Dash");
+        if (dashSound != null && audioSource != null)
+        {
+    audioSource.PlayOneShot(dashSound);
+        }
 
         float originalGravity = body.gravityScale;
         body.gravityScale = 0f;

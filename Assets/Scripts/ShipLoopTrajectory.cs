@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+[RequireComponent(typeof(AudioSource))] // Гарантирует наличие AudioSource для проигрывания звука взрыва
 public class ChaoticShipFlight : MonoBehaviour
 {
     [Header("Зона спокойного полета")]
@@ -20,6 +21,10 @@ public class ChaoticShipFlight : MonoBehaviour
     public GameObject tapToPlayUI;
     [Tooltip("Перетащи сюда скрытый объект огня позади корабля")]
     public GameObject fireEffectObject;
+    [Tooltip("Объект или Аниматор взрыва, который включится на старте падения")]
+    public GameObject explosionEffectObject;
+    [Tooltip("Звуковой клип Sci_Fi_Explosion_5")]
+    public AudioClip explosionSound;
     [Tooltip("Сколько секунд корабль сильно качает с включенным огнем перед уходом вниз")]
     public float boostDuration = 1.5f;
     [Tooltip("Во сколько раз увеличиваются колебания при включении огня")]
@@ -41,14 +46,21 @@ public class ChaoticShipFlight : MonoBehaviour
     private bool isStarted = false;
     private float currentSwayMultiplier = 1f; // 1 - обычный полет, 2 - усиленные колебания
     private Coroutine flightCoroutine;
+    private AudioSource audioSource;
 
     void Start()
     {
         startPosition = transform.position;
+        audioSource = GetComponent<AudioSource>();
 
         if (fireEffectObject != null)
         {
             fireEffectObject.SetActive(false);
+        }
+
+        if (explosionEffectObject != null)
+        {
+            explosionEffectObject.SetActive(false);
         }
 
         if (tapToPlayUI != null)
@@ -74,21 +86,53 @@ public class ChaoticShipFlight : MonoBehaviour
     {
         isStarted = true;
 
-        // 1. Прячем надпись "Tap to Play" и включаем огонь
+        // 1. Прячем надпись "Tap to Play"
         if (tapToPlayUI != null) tapToPlayUI.SetActive(false);
+
+        // 2. Включаем анимацию взрыва и воспроизводим звук взрыва Sci_Fi_Explosion_5
+        if (explosionEffectObject != null)
+        {
+            explosionEffectObject.SetActive(true);
+            // Если на объекте взрыва есть аниматор, он автоматически начнет играть анимацию взрыва
+        }
+
+        if (audioSource != null && explosionSound != null)
+        {
+            audioSource.PlayOneShot(explosionSound);
+        }
+
+        // Ждем ровно 0.1 секунды перед запуском огня
+        yield return new WaitForSeconds(0.1f);
+
+        // 3. Включаем огонь позади корабля
         if (fireEffectObject != null) fireEffectObject.SetActive(true);
 
-        // 2. Увеличиваем колебания в 2 раза и перезапускаем маневр, чтобы корабль сразу отреагировал
+        // Опционально: выключаем объект взрыва через некоторое время (например, через 1 секунду), чтобы он не висел на сцене
+        StartCoroutine(DeactivateExplosionAfterDelay(1.0f));
+
+        // 4. Увеличиваем колебания в 2 раза и перезапускаем маневр, чтобы корабль сразу отреагировал
         currentSwayMultiplier = boostMultiplier;
         if (flightCoroutine != null) StopCoroutine(flightCoroutine);
         flightCoroutine = StartCoroutine(SmoothFlightRoutine());
 
-        // 3. Ждем 1.5 секунды, пока корабль активно раскачивается с работающим огнем
-        yield return new WaitForSeconds(boostDuration);
+        // 5. Ждем оставшееся время буста, пока корабль активно раскачивается с работающим огнем
+        // (вычитаем 0.1 секунды, чтобы общая длительность boostDuration оставалась точной)
+        float remainingBoost = Mathf.Max(0.1f, boostDuration - 0.1f);
+        yield return new WaitForSeconds(remainingBoost);
 
-        // 4. Останавливаем качку и плавно уводим корабль вниз за экран
+        // 6. Останавливаем качку и плавно уводим корабль вниз за экран
         if (flightCoroutine != null) StopCoroutine(flightCoroutine);
         StartCoroutine(DiveDownRoutine());
+    }
+
+    // Вспомогательная корутина для скрытия объекта взрыва после завершения его анимации
+    IEnumerator DeactivateExplosionAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (explosionEffectObject != null)
+        {
+            explosionEffectObject.SetActive(false);
+        }
     }
 
     // Корутина полета (работает и в спокойном режиме, и в усиленном в 2 раза)

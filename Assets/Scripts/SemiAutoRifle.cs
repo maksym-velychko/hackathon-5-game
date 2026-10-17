@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+[RequireComponent(typeof(AudioSource))] // Автоматически добавит AudioSource на винтовку
 public class SemiAutoRifle : MonoBehaviour
 {
     [Header("Задержка между выстрелом")]
@@ -24,9 +25,21 @@ public class SemiAutoRifle : MonoBehaviour
     public Transform firePoint;
     public GameObject bulletPrefab;
 
+    [Header("Звуки оружия")]
+    public AudioSource audioSource;
+    [Tooltip("Звук выстрела")]
+    public AudioClip shootSound;
+    [Tooltip("Звук перезарядки")]
+    public AudioClip reloadSound;
+
     void Start()
     {
         currentAmmo = maxAmmo;
+
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
     }
 
     void OnDisable()
@@ -116,6 +129,12 @@ public class SemiAutoRifle : MonoBehaviour
         nextFireTime = Time.time + fireRate;
         currentAmmo--;
 
+        // Проигрываем звук выстрела
+        if (shootSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(shootSound);
+        }
+
         if (anim != null)
         {
             anim.SetTrigger("Shoot"); 
@@ -149,6 +168,12 @@ public class SemiAutoRifle : MonoBehaviour
     IEnumerator Reload()
     {
         isReloading = true;
+
+        // Проигрываем звук перезарядки
+        if (reloadSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(reloadSound);
+        }
 
         if (anim != null)
         {

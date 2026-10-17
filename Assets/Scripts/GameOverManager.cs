@@ -5,46 +5,32 @@ using UnityEngine.SceneManagement;
 public class GameOverManager : MonoBehaviour
 {
     [Header("UI Меню смерти")]
-    [Tooltip("Перетащи сюда весь GameObject Canvas с менюшкой смерти")]
     public GameObject gameOverCanvas;
 
+    [Header("Названия сцен для кнопок")]
+    [Tooltip("Точное название сцены для рестарта")]
+    public string restartSceneName = "OriginalScene";
+    [Tooltip("Точное название сцены главного меню")]
+    public string menuSceneName = "Menu";
+
     [Header("Приближение камеры при смерти")]
-    [Tooltip("Ссылка на основную камеру (если пусто, найдет Camera.main)")]
     public Camera mainCamera;
-    [Tooltip("Целевой размер камеры при приближении (например, 2.5 или 3)")]
     public float targetZoomSize = 2.5f;
-    [Tooltip("Скорость приближения камеры")]
     public float zoomSpeed = 3f;
 
     [Header("Настройки паузы")]
-    [Tooltip("Через сколько секунд после смерти игра ставится на паузу")]
     public float pauseDelay = 1f;
 
-    private float defaultZoomSize;
     private bool isPlayerDead = false;
 
     void Start()
     {
-        if (gameOverCanvas != null)
-        {
-            gameOverCanvas.SetActive(false);
-        }
-
-        if (mainCamera == null)
-        {
-            mainCamera = Camera.main;
-        }
-
-        if (mainCamera != null)
-        {
-            defaultZoomSize = mainCamera.orthographicSize;
-        }
+        if (gameOverCanvas != null) gameOverCanvas.SetActive(false);
+        if (mainCamera == null) mainCamera = Camera.main;
     }
 
     void Update()
     {
-        // Если игрок погиб, плавно приближаем камеру.
-        // Используем unscaledDeltaTime, чтобы зум работал даже после остановки времени (Time.timeScale = 0)
         if (isPlayerDead && mainCamera != null)
         {
             mainCamera.orthographicSize = Mathf.Lerp(
@@ -55,42 +41,43 @@ public class GameOverManager : MonoBehaviour
         }
     }
 
-    // Метод, который вызывает PlayerHealth при гибели
     public void ShowGameOverMenu()
     {
         if (isPlayerDead) return;
         isPlayerDead = true;
 
-        if (gameOverCanvas != null)
-        {
-            gameOverCanvas.SetActive(true);
-        }
-
-        // Запускаем отсчет 1 секунды перед постановкой игры на паузу
+        if (gameOverCanvas != null) gameOverCanvas.SetActive(true);
         StartCoroutine(PauseGameRoutine());
     }
 
-    // Корутина ожидания перед паузой
     IEnumerator PauseGameRoutine()
     {
-        // Ждем 1 секунду реального времени (даже если кадры идут)
         yield return new WaitForSecondsRealtime(pauseDelay);
-
-        // Ставим игру на паузу. 
-        // Физика, враги и скрипты персонажа остановятся, но кнопки в Canvas продолжат работать!
-        Time.timeScale = 0f;
+        Time.timeScale = 0f; // Ставим на паузу
     }
 
+    // ==========================================
+    // МЕТОДЫ ДЛЯ ТВОИХ ТРЕХ КНОПОК
+    // ==========================================
+
+    // 1. Кнопка "Рестарт"
     public void RestartGame()
     {
-        // Обязательно возвращаем нормальное время перед перезагрузкой уровня
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        Time.timeScale = 1f; // Обязательно снимаем с паузы!
+        SceneManager.LoadScene(restartSceneName); // Грузит "OriginalScene"
     }
 
-    public void LoadMainMenu(string menuSceneName)
+    // 2. Кнопка "Меню"
+    public void LoadMainMenu()
     {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(menuSceneName);
+        Time.timeScale = 1f; // Обязательно снимаем с паузы!
+        SceneManager.LoadScene(menuSceneName); // Грузит "Menu"
+    }
+
+    // 3. Кнопка "Выход"
+    public void QuitGame()
+    {
+        Debug.Log("Выход из игры (Application.Quit)");
+        Application.Quit(); // Закрывает игру (работает только в скомпилированном билде, не в редакторе Unity)
     }
 }
